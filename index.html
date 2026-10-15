@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="lo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ຮ້ານຂອງຂ້ອຍ</title>
+<meta name="description" content="ສັ່ງຊື້ສິນຄ້າອອນລາຍ ສົ່ງທົ່ວລາວ">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ຮ້ານຂອງຂ້ອຍ — ສັ່ງຊື້ສິນຄ້າອອນລາຍ">
+<meta property="og:description" content="ເບິ່ງສິນຄ້າ ແລະ ສັ່ງຊື້ໄດ້ທັນທີ ສົ່ງທົ່ວລາວ">
+<meta name="theme-color" content="#0B6B58">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+Lao:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F3F6F4;--card:#FFFFFF;--ink:#13241F;--muted:#586964;--line:#D8E1DD;
+  --brand:#0B6B58;--brand-ink:#FFFFFF;--brand-soft:#DAEEE8;--hot:#D9480F;--hot-soft:#FDE6DA;
+  --ok:#1B7F46;--ok-soft:#DCF0E3;--warn:#9A5B00;--warn-soft:#FBE9C6;--bad:#B8362A;--bad-soft:#F8DCD8;
+  --info:#1F5BA6;--info-soft:#DCE8F7;--bar:#8FC9BB;--scrim:rgba(10,22,18,.5);
+  --shadow:0 1px 2px rgba(19,36,31,.08),0 8px 24px rgba(19,36,31,.1);
+  --f:'IBM Plex Sans','Noto Sans Lao','Phetsarath OT',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0D1714;--card:#15231F;--ink:#E5F0EC;--muted:#93A59F;--line:#2A403A;
+  --brand:#3CC7A5;--brand-ink:#05201A;--brand-soft:#133A31;--hot:#FF8A57;--hot-soft:#3D2117;
+  --ok:#5CCB8A;--ok-soft:#143221;--warn:#F0B25A;--warn-soft:#3A2A10;--bad:#F28676;--bad-soft:#3B1A15;
+  --info:#86B6F0;--info-soft:#15293F;--bar:#2C7A69;--scrim:rgba(0,0,0,.65);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.4);color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.65 var(--f)}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-height:44px;width:100%;min-width:0}
+textarea{resize:vertical;line-height:1.5}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500;min-width:0}
+label.check{flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+label.check input{width:20px;min-height:20px;height:20px;accent-color:var(--brand)}
+h1,h2,h3{margin:0;line-height:1.35;text-wrap:balance}
+img{max-width:100%}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px}
+.muted{color:var(--muted)}.sm{font-size:13px}.b{font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.col{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;gap:10px}
+.sp{flex:1}
+.hide{display:none!important}
+
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 16px;min-height:46px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center;text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--brand)}
+.btn.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.btn.wa{background:#1F9D55;color:#fff;border-color:#1F9D55}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.danger.sure{background:var(--bad);color:#fff}
+.btn.big{width:100%;min-height:52px;font-size:16px}
+.btn.sm{min-height:36px;padding:3px 12px;font-size:13.5px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.x{border:0;background:none;width:40px;height:40px;border-radius:8px;display:grid;place-items:center;color:var(--muted);font-size:22px;line-height:1}
+.x:hover{background:var(--brand-soft)}
+
+.badge{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:0 8px;line-height:22px;white-space:nowrap}
+.b-new{background:var(--warn-soft);color:var(--warn)}.b-confirmed{background:var(--info-soft);color:var(--info)}
+.b-shipped{background:var(--brand-soft);color:var(--brand)}.b-done{background:var(--ok-soft);color:var(--ok)}
+.b-cancelled{background:var(--bad-soft);color:var(--bad)}.b-hot{background:var(--hot-soft);color:var(--hot)}
+.b-ok{background:var(--ok-soft);color:var(--ok)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-off{background:var(--line);color:var(--muted)}
+
+.ov{position:fixed;inset:0;background:var(--scrim);z-index:100;display:flex;align-items:flex-end;justify-content:center;overflow:auto;padding:0}
+.md{background:var(--card);width:100%;max-width:560px;max-height:94vh;overflow:auto;border-radius:18px 18px 0 0;box-shadow:var(--shadow);padding:16px 18px 24px}
+.md.wide{max-width:760px}
+.md .mh{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.md .mh h2{flex:1;font-size:18px}
+@media (min-width:700px){.ov{align-items:center;padding:20px}.md{border-radius:18px;max-height:90vh}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;z-index:200;font-weight:600;max-width:90vw;box-shadow:var(--shadow)}
+.toast.bad{background:var(--bad);color:#fff}
+.err{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:8px 12px;font-size:14px}
+.hint{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:8px 12px;font-size:13.5px}
+.okbox{background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:8px 12px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.empty{text-align:center;color:var(--muted);padding:36px 12px}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+.stepper{display:flex;gap:4px;margin:8px 0}
+.stepper i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.stepper i.on{background:var(--brand)}
+.stlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.stlab span.on{color:var(--brand);font-weight:700}
+
+.qrbox{margin-top:10px;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}.qrbox img{width:100%;max-width:280px;background:#fff;border-radius:12px;padding:8px;border:1px solid var(--line)}.qrbox .pre{white-space:pre-wrap;text-align:left;font-size:14px;align-self:stretch;background:var(--brand-soft);border-radius:10px;padding:8px 12px}
+
+header.hd{position:sticky;top:0;z-index:30;background:var(--brand);color:var(--brand-ink)}
+.hd .row{padding-block:10px;flex-wrap:wrap}
+.hd h1{font-size:18px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48vw}
+.sbx{flex:1;min-width:160px}.sbx input{border:0}
+.hb{border:0;background:rgba(255,255,255,.18);color:inherit;border-radius:10px;padding:4px 14px;min-height:44px;font-weight:600;font-size:14px;white-space:nowrap;position:relative}
+.hb:hover{background:rgba(255,255,255,.28)}
+.hb b{position:absolute;top:-5px;right:-5px;background:var(--hot);color:#fff;font-size:11px;min-width:20px;height:20px;border-radius:10px;display:grid;place-items:center;padding:0 5px}
+@media (max-width:640px){.sbx{order:5;flex-basis:100%}.hd h1{max-width:40vw}}
+main{padding-block:14px 60px}
+.promo{background:var(--brand);color:var(--brand-ink);border-radius:14px;padding:14px 18px;font-size:15px}
+.tabs{display:flex;gap:4px;margin-top:14px;border-bottom:2px solid var(--line);overflow-x:auto}
+.tab{flex:none;border:0;background:none;padding:9px 14px 8px;min-height:44px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab[aria-pressed=true]{color:var(--brand);border-bottom-color:var(--brand)}
+.tools{display:flex;gap:8px;align-items:center;margin-top:12px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;flex:1}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 14px;min-height:36px;font-size:14px}
+.chip[aria-pressed=true]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.tools select{width:auto;min-height:36px;padding:2px 10px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+@media (min-width:640px){.grid{grid-template-columns:repeat(3,1fr);gap:14px}}
+@media (min-width:960px){.grid{grid-template-columns:repeat(4,1fr)}}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.im{position:relative;aspect-ratio:1/1;background:var(--brand-soft);display:grid;place-items:center;color:var(--brand);font-size:44px;font-weight:700}
+.im img{width:100%;height:100%;object-fit:cover;display:block}
+.im .badge{position:absolute;top:8px;left:8px}
+.im .so{position:absolute;inset:0;background:rgba(0,0,0,.45);color:#fff;display:grid;place-items:center;font-size:16px}
+.pb{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px;flex:1}
+.pb h3{font-size:14.5px;font-weight:600;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pr{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pr b{color:var(--hot);font-size:16px}.pr s{color:var(--muted);font-size:13px}
+.qty{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--brand);border-radius:10px;min-height:40px}
+.qty button{border:0;background:none;width:44px;height:38px;font-size:20px;font-weight:700;color:var(--brand)}
+.line{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.line .t{width:48px;height:48px;border-radius:8px;background:var(--brand-soft);overflow:hidden;display:grid;place-items:center;color:var(--brand);font-weight:700;flex:none}
+.line .t img{width:100%;height:100%;object-fit:cover}
+.line .n{flex:1;min-width:0;font-size:14px;line-height:1.4}
+.line .qty{width:112px;flex:none}
+.tot{display:flex;justify-content:space-between;padding:3px 0}
+.tot.g{font-weight:700;font-size:17px;border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
+.oc{display:flex;flex-direction:column;gap:6px}
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pay label{flex-direction:row;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink);font-size:14px;min-height:46px;cursor:pointer}
+.pay label:has(input:checked){border-color:var(--brand);background:var(--brand-soft)}
+.pay input{width:18px;min-height:18px;height:18px;accent-color:var(--brand)}
+.im[data-view],.pb h3[data-view]{cursor:pointer}
+.vn{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip[disabled]{opacity:.45;text-decoration:line-through;cursor:not-allowed}
+.gal .big{aspect-ratio:1/1;max-height:52vh;width:100%;background:var(--brand-soft);border-radius:14px;overflow:hidden;display:grid;place-items:center;color:var(--brand);font-size:64px;font-weight:700}
+.gal .big img{width:100%;height:100%;object-fit:contain;background:#fff;display:block}
+.thumbs{display:flex;gap:8px;margin-top:8px;overflow-x:auto;padding-bottom:2px}
+.th{flex:none;width:56px;height:56px;border:2px solid var(--line);border-radius:10px;padding:0;overflow:hidden;background:var(--card)}
+.th.on{border-color:var(--brand)}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+details.card>summary{cursor:pointer;font-weight:700;min-height:36px;display:flex;align-items:center}
+footer{padding:20px 0 40px;text-align:center;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header class="hd"><div class="wrap"><div class="row">
+  <h1 id="shopname">ຮ້ານຂອງຂ້ອຍ</h1>
+  <div class="sbx"><input id="q" type="search" placeholder="ຄົ້ນຫາສິນຄ້າ…" aria-label="ຄົ້ນຫາສິນຄ້າ" autocomplete="off"></div>
+  <button class="hb" id="bOrders" type="button">ອໍເດີຂອງຂ້ອຍ</button>
+  <button class="hb" id="bCart" type="button" aria-label="ກະຕ່າ">🛒 ກະຕ່າ<b id="cc" class="hide">0</b></button>
+</div></div></header>
+<main class="wrap" id="app"><div class="empty"><span class="spin"></span> ກຳລັງໂຫຼດສິນຄ້າ…</div></main>
+<footer id="foot"></footer>
+<script>
+var SB_URL='https://xseqfrczkkfvnpumdsob.supabase.co',SB_KEY='sb_publishable_jCP5FTr_ecr9zMHnOyucdg_39rMOuaJ';
+var PROVINCES=['ນະຄອນຫຼວງວຽງຈັນ','ຜົ້ງສາລີ','ຫຼວງນ້ຳທາ','ບໍ່ແກ້ວ','ອຸດົມໄຊ','ຫຼວງພະບາງ','ໄຊຍະບູລີ','ຊຽງຂວາງ','ຫົວພັນ','ວຽງຈັນ','ໄຊສົມບູນ','ບໍລິຄຳໄຊ','ຄຳມ່ວນ','ສະຫວັນນະເຂດ','ສາລະວັນ','ເຊກອງ','ຈຳປາສັກ','ອັດຕະປື'];
+var STATUS={new:'ລໍຖ້າຢືນຢັນ',confirmed:'ຢືນຢັນແລ້ວ',shipped:'ກຳລັງຈັດສົ່ງ',done:'ສຳເລັດ',cancelled:'ຍົກເລີກ'};
+var $=function(s,r){return(r||document).querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function money(n){return Math.round(Number(n)||0).toLocaleString('en-US')+' ກີບ'}
+function ls(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function eff(p){return p.sale>0&&p.sale<p.price?Number(p.sale):Number(p.price)}
+function fmtDate(s){var d=new Date(s);if(isNaN(d))return'';var z=function(n){return String(n).padStart(2,'0')};return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' '+z(d.getHours())+':'+z(d.getMinutes())}
+function toast(m,bad){var t=document.createElement('div');t.className='toast'+(bad?' bad':'');t.setAttribute('role','status');t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},bad?4200:2200)}
+function shipFee(S,sub,prov){var st=S||{};var fees=st.fees||{};var f=(prov&&fees[prov]!=null&&fees[prov]!=='')?Number(fees[prov]):Number(st.def)||0;var fr=Number(st.free)||0;return(fr>0&&sub>=fr)?0:f}
+var SB=(function(){
+  var K='shop_session',sess=ls(K,null);
+  function save(s){sess=s;try{s?localStorage.setItem(K,JSON.stringify(s)):localStorage.removeItem(K)}catch(e){}}
+  function pack(j){return{access_token:j.access_token,refresh_token:j.refresh_token,expires_at:Math.floor(Date.now()/1000)+(j.expires_in||3600),email:(j.user&&j.user.email)||''}}
+  function refresh(){
+    if(!sess||!sess.refresh_token)return Promise.resolve(false);
+    return fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:sess.refresh_token})})
+      .then(function(r){if(!r.ok){save(null);return false}return r.json().then(function(j){save(pack(j));return true})}).catch(function(){return false})
+  }
+  function req(method,path,body,extra,retried){
+    var pre=(sess&&sess.expires_at-60<Date.now()/1000)?refresh():Promise.resolve();
+    return pre.then(function(){
+      var h={apikey:SB_KEY};if(body!==undefined)h['Content-Type']='application/json';
+      if(sess)h.Authorization='Bearer '+sess.access_token;
+      for(var k in(extra||{}))h[k]=extra[k];
+      return fetch(SB_URL+path,{method:method,headers:h,body:body===undefined?undefined:JSON.stringify(body)})
+    }).then(function(r){
+      if(r.status===401&&!retried&&sess)return refresh().then(function(ok){if(ok)return req(method,path,body,extra,true);throw new Error('ໝົດເວລາເຂົ້າລະບົບ ກະລຸນາເຂົ້າໃໝ່')});
+      return r.text().then(function(t){
+        var j=null;try{j=t?JSON.parse(t):null}catch(e){}
+        if(!r.ok)throw new Error((j&&(j.message||j.msg||j.error_description||j.hint))||('ຜິດພາດ '+r.status));
+        return j
+      })
+    },function(){throw new Error('ເຊື່ອມຕໍ່ອິນເຕີເນັດບໍ່ໄດ້')})
+  }
+  var REP={Prefer:'return=representation'};
+  return{
+    get session(){return sess},
+    select:function(t,q){return req('GET','/rest/v1/'+t+'?'+(q||'select=*'))},
+    insert:function(t,row){return req('POST','/rest/v1/'+t,row,REP)},
+    upsert:function(t,row,key){return req('POST','/rest/v1/'+t+'?on_conflict='+key,row,{Prefer:'resolution=merge-duplicates,return=representation'})},
+    update:function(t,match,row){return req('PATCH','/rest/v1/'+t+'?'+match,row,REP)},
+    del:function(t,match){return req('DELETE','/rest/v1/'+t+'?'+match,undefined,{Prefer:'return=minimal'})},
+    rpc:function(fn,args){return req('POST','/rest/v1/rpc/'+fn,args||{})},
+    login:function(email,pw){
+      return fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})})
+        .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error_description||j.msg||j.message||'ອີເມວ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກ');save(pack(j))})},function(){throw new Error('ເຊື່ອມຕໍ່ອິນເຕີເນັດບໍ່ໄດ້')})
+    },
+    logout:function(){save(null)}
+  }
+})();
+function modal(html,cls){
+  var o=document.createElement('div');o.className='ov';o.innerHTML='<div class="md '+(cls||'')+'" role="dialog" aria-modal="true">'+html+'</div>';
+  o.addEventListener('mousedown',function(e){if(e.target===o)o.remove()});
+  document.body.appendChild(o);
+  var f=o.querySelector('input,select,textarea,button');if(f&&!/Android|iPhone/.test(navigator.userAgent))f.focus();
+  return o}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var o=document.querySelectorAll('.ov');if(o.length)o[o.length-1].remove()}});
+
+(function(){
+var P=[],ST={},CART=ls('shop_cart',{}),TOK=ls('shop_tokens',[]),F=ls('shop_cust',{name:'',phone:'',address:'',province:'',note:''});
+var V={view:'shop',tab:'all',cat:'',q:'',sort:'new',pay:'cod',coupon:'',cdisc:0,cmsg:'',busy:false,orders:null,loadErr:''};
+var byId={};
+function save(){lsSet('shop_cart',CART);lsSet('shop_cust',F)}
+function hasV(p){return Array.isArray(p.variants)&&p.variants.length>0}
+function kSplit(k){var i=k.indexOf('|');return i<0?{id:k,v:''}:{id:k.slice(0,i),v:k.slice(i+1)}}
+function kOf(id,v){return v?id+'|'+v:id}
+function stockOf(p,v){if(!hasV(p))return p.stock;for(var i=0;i<p.variants.length;i++)if(p.variants[i].name===v)return Math.max(0,Number(p.variants[i].stock)||0);return 0}
+function lineName(p,v){return p.name+(v?' ('+v+')':'')}
+function cartLines(){var out=[];for(var k in CART){var s=kSplit(k),p=byId[s.id];if(!p)continue;if(hasV(p)&&!s.v)continue;var st=stockOf(p,s.v),q=Math.min(CART[k],st);if(q<=0)continue;out.push({p:p,v:s.v,k:k,q:q,stock:st})}return out}
+function calc(){var L=cartLines(),sub=0,n=0;L.forEach(function(l){sub+=eff(l.p)*l.q;n+=l.q});var d=Math.min(V.cdisc||0,sub);var ship=L.length?shipFee(ST,sub-d,F.province):0;return{L:L,n:n,sub:sub,d:d,ship:ship,total:sub-d+ship}}
+function init(){
+  Promise.all([SB.select('products','select=*&order=created_at.desc'),SB.select('settings','select=data&id=eq.1')]).then(function(r){
+    P=r[0]||[];byId={};P.forEach(function(p){byId[p.id]=p});ST=(r[1]&&r[1][0]&&r[1][0].data)||{};
+    for(var ck in CART)if(!byId[kSplit(ck).id])delete CART[ck];
+    V.loadErr='';applySettings();render();updCart();openLinked()
+  }).catch(function(e){V.loadErr=e.message;render()})
+}
+function applySettings(){
+  var n=ST.name||'ຮ້ານຂອງຂ້ອຍ';$('#shopname').textContent=n;document.title=n;
+  $('#foot').textContent='© '+n
+}
+function updCart(){var c=calc().n,b=$('#cc');b.textContent=c;b.classList.toggle('hide',!c)}
+function render(){
+  var app=$('#app');
+  if(V.view==='orders'){renderOrders();return}
+  if(V.loadErr){app.innerHTML='<div class="empty">ໂຫຼດສິນຄ້າບໍ່ໄດ້<br><span class="sm">'+esc(V.loadErr)+'</span><br><br><button class="btn primary" id="retry">ລອງໃໝ່</button></div>';$('#retry').onclick=function(){V.loadErr='';init()};return}
+  var cats=[];P.forEach(function(p){if(p.category&&cats.indexOf(p.category)<0)cats.push(p.category)});
+  var list=P.filter(function(p){
+    if(V.tab==='best'&&!p.best)return false;
+    if(V.tab==='promo'&&!(p.sale>0&&p.sale<p.price))return false;
+    if(V.cat&&p.category!==V.cat)return false;
+    if(V.q&&(p.name+' '+p.category).toLowerCase().indexOf(V.q.toLowerCase())<0)return false;
+    return true});
+  list.sort(function(a,b){return V.sort==='lo'?eff(a)-eff(b):V.sort==='hi'?eff(b)-eff(a):0});
+  var h='';
+  if(ST.banner)h+='<div class="promo">'+esc(ST.banner)+'</div>';
+  h+='<div class="tabs" role="tablist">'+[['all','ທັງໝົດ'],['best','⭐ ສິນຄ້າຂາຍດີ'],['promo','🔥 ໂປຣໂມຊັນ ລົດລາຄາ']].map(function(t){return'<button class="tab" data-tab="'+t[0]+'" aria-pressed="'+(V.tab===t[0])+'">'+t[1]+'</button>'}).join('')+'</div>';
+  h+='<div class="tools"><div class="chips">'+(cats.length?['']:[]).concat(cats).map(function(c){return'<button class="chip" data-cat="'+esc(c)+'" aria-pressed="'+(V.cat===c)+'">'+(c?esc(c):'ທຸກໝວດ')+'</button>'}).join('')+'</div>'+
+    '<select id="sort" aria-label="ຈັດລຽງ"><option value="new"'+(V.sort==='new'?' selected':'')+'>ໃໝ່ສຸດ</option><option value="lo"'+(V.sort==='lo'?' selected':'')+'>ລາຄາຕ່ຳ→ສູງ</option><option value="hi"'+(V.sort==='hi'?' selected':'')+'>ລາຄາສູງ→ຕ່ຳ</option></select></div>';
+  if(!list.length)h+='<div class="empty">'+(P.length?'ບໍ່ພົບສິນຄ້າ':'ຍັງບໍ່ມີສິນຄ້າ')+'</div>';
+  else h+='<div class="grid">'+list.map(card).join('')+'</div>';
+  app.innerHTML=h;
+}
+function card(p){
+  var sale=p.sale>0&&p.sale<p.price,out=p.stock<=0,hv=hasV(p),q=hv?0:(CART[p.id]||0);
+  var pct=sale?Math.round((1-p.sale/p.price)*100):0;
+  return'<article class="pc"><div class="im" data-view="'+p.id+'" role="button" tabindex="0" aria-label="ເບິ່ງ '+esc(p.name)+'">'+(p.img?'<img loading="lazy" alt="'+esc(p.name)+'" src="'+esc(p.img)+'">':esc((p.name||'?').charAt(0)))+
+    (sale?'<span class="badge b-hot">-'+pct+'%</span>':p.best?'<span class="badge b-warn">ຂາຍດີ</span>':'')+(out?'<div class="so">ໝົດ</div>':'')+'</div>'+
+    '<div class="pb"><h3 data-view="'+p.id+'">'+esc(p.name)+'</h3><div class="pr"><b>'+money(eff(p))+'</b>'+(sale?'<s>'+money(p.price)+'</s>':'')+'</div>'+
+    (hv?'<div class="vn">'+esc((p.opt_label?p.opt_label+': ':'')+p.variants.map(function(x){return x.name}).join(' · '))+'</div>':'')+
+    (p.descr?'<div class="sm muted">'+esc(p.descr)+'</div>':'')+
+    (!out&&p.stock<=(p.low||5)?'<div class="sm" style="color:var(--warn)">ເຫຼືອ '+p.stock+' ອັນ</div>':'')+
+    '<div style="margin-top:auto;padding-top:6px">'+(out?'<button class="btn sm" style="width:100%" disabled>ສິນຄ້າໝົດ</button>':hv?'<button class="btn primary sm" style="width:100%;min-height:40px" data-view="'+p.id+'">ເລືອກ'+esc(p.opt_label||'ຕົວເລືອກ')+'</button>':q?'<div class="qty"><button data-dec="'+p.id+'" aria-label="ຫຼຸດ">−</button><b>'+q+'</b><button data-inc="'+p.id+'" aria-label="ເພີ່ມ">+</button></div>':'<button class="btn primary sm" style="width:100%;min-height:40px" data-add="'+p.id+'">+ ໃສ່ກະຕ່າ</button>')+'</div></div></article>'
+}
+function setQ(k,q){var s=kSplit(k),p=byId[s.id];if(!p)return;q=Math.max(0,Math.min(q,stockOf(p,s.v),99));if(q)CART[k]=q;else delete CART[k];save();updCart();V.coupon&&checkCoupon(true);if(V.view==='shop')render();if($('#cartm'))cartView();if($('#pdm'))prodView()}
+// ---- cart & checkout ----
+function openCart(){var o=modal('<div id="cartm"></div>','wide');o.id='cartov';cartView()}
+function cartView(){
+  var el=$('#cartm');if(!el)return;var c=calc();
+  var keep=document.activeElement&&document.activeElement.id;
+  if(!c.L.length){el.innerHTML='<div class="mh"><h2>🛒 ກະຕ່າ</h2><button class="x" data-close aria-label="ປິດ">×</button></div><div class="empty">ກະຕ່າຍັງວ່າງ</div>';return}
+  var h='<div class="mh"><h2>🛒 ກະຕ່າ ('+c.n+')</h2><button class="x" data-close aria-label="ປິດ">×</button></div>';
+  h+=c.L.map(function(l){var p=l.p;return'<div class="line"><div class="t">'+(p.img?'<img alt="" src="'+esc(p.img)+'">':esc(p.name.charAt(0)))+'</div><div class="n"><div>'+esc(lineName(p,l.v))+'</div><div class="sm muted">'+money(eff(p))+'</div></div><div class="qty"><button data-dec="'+esc(l.k)+'" aria-label="ຫຼຸດ">−</button><b>'+l.q+'</b><button data-inc="'+esc(l.k)+'" aria-label="ເພີ່ມ">+</button></div></div>'}).join('');
+  h+='<h3 style="margin:16px 0 8px;font-size:16px">ຂໍ້ມູນຈັດສົ່ງ</h3><div class="col">'+
+    '<label>ຊື່ຜູ້ຮັບ *<input id="fName" autocomplete="name" value="'+esc(F.name)+'"></label>'+
+    '<label>ເບີໂທ (WhatsApp) *<input id="fPhone" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(F.phone)+'" placeholder="020 XXXX XXXX"></label>'+
+    '<label>ແຂວງ *<select id="fProv"><option value="">— ເລືອກແຂວງ —</option>'+PROVINCES.map(function(p){return'<option'+(F.province===p?' selected':'')+'>'+p+'</option>'}).join('')+'</select></label>'+
+    '<label>ທີ່ຢູ່ / ບ້ານ / ເມືອງ / ຈຸດນັດຮັບ<textarea id="fAddr" rows="2">'+esc(F.address)+'</textarea></label>'+
+    '<label>ໝາຍເຫດ<input id="fNote" value="'+esc(F.note)+'" placeholder="ເຊັ່ນ ໂທກ່ອນສົ່ງ"></label></div>';
+  h+='<h3 style="margin:16px 0 8px;font-size:16px">ວິທີຊຳລະ</h3><div class="pay"><label><input type="radio" name="pay" value="cod"'+(V.pay==='cod'?' checked':'')+'> ເກັບເງິນປາຍທາງ</label><label><input type="radio" name="pay" value="transfer"'+(V.pay==='transfer'?' checked':'')+'> ໂອນເງິນ</label></div>';
+  if(V.pay==='transfer')h+=qrBox(null);
+  h+='<div class="row" style="margin-top:14px"><input id="fCoupon" placeholder="ລະຫັດຄູປອງ" value="'+esc(V.coupon)+'" style="text-transform:uppercase"><button class="btn" id="bCoupon" type="button">ໃຊ້</button></div>';
+  if(V.cmsg)h+='<div class="'+(V.cdisc?'okbox':'err')+'" style="margin-top:8px">'+esc(V.cmsg)+'</div>';
+  h+='<div style="margin-top:14px"><div class="tot"><span>ລາຄາສິນຄ້າ</span><span>'+money(c.sub)+'</span></div>'+(c.d?'<div class="tot" style="color:var(--ok)"><span>ສ່ວນຫຼຸດຄູປອງ</span><span>−'+money(c.d)+'</span></div>':'')+
+    '<div class="tot"><span>ຄ່າຈັດສົ່ງ'+(F.province?'':' <span class="sm muted">(ເລືອກແຂວງ)</span>')+'</span><span>'+(c.ship?money(c.ship):(F.province?'ຟຣີ':'—'))+'</span></div>'+
+    ((Number(ST.free)>0&&c.sub-c.d<Number(ST.free))?'<div class="sm muted">ຊື້ຄົບ '+money(ST.free)+' ສົ່ງຟຣີ</div>':'')+
+    '<div class="tot g"><span>ລວມທັງໝົດ</span><span>'+money(c.total)+'</span></div></div>';
+  h+='<div id="cerr"></div><button class="btn primary big" id="bPlace" style="margin-top:12px"'+(V.busy?' disabled':'')+'>'+(V.busy?'ກຳລັງສົ່ງ…':'ຢືນຢັນສັ່ງຊື້')+'</button>';
+  el.innerHTML=h;
+  if(keep&&$('#'+keep,el)){var e=$('#'+keep,el);e.focus();try{var l=e.value.length;e.setSelectionRange(l,l)}catch(x){}}
+}
+function readForm(){var g=function(i){var e=$('#'+i);return e?e.value:''};F.name=g('fName').trim();F.phone=g('fPhone').trim();F.province=g('fProv');F.address=g('fAddr').trim();F.note=g('fNote').trim();save()}
+function checkCoupon(silent){
+  var code=V.coupon.trim();if(!code){V.cdisc=0;V.cmsg='';return Promise.resolve()}
+  var sub=calc().sub;
+  return SB.rpc('check_coupon',{p_code:code,p_subtotal:sub}).then(function(r){
+    if(r.ok){V.cdisc=r.discount;V.cmsg='ໃຊ້ຄູປອງ '+r.code+' ແລ້ວ ຫຼຸດ '+money(r.discount)}else{V.cdisc=0;if(!silent)V.cmsg=r.msg;else V.cmsg=r.msg}
+    if($('#cartm'))cartView()
+  }).catch(function(e){V.cdisc=0;V.cmsg=e.message;if($('#cartm'))cartView()})
+}
+function place(){
+  readForm();var c=calc(),er=$('#cerr');
+  var bad=!F.name?'ກະລຸນາໃສ່ຊື່':(F.phone.replace(/\D/g,'').length<8?'ກະລຸນາໃສ່ເບີໂທໃຫ້ຖືກຕ້ອງ':!F.province?'ກະລຸນາເລືອກແຂວງ':'');
+  if(bad){er.innerHTML='<div class="err" style="margin-top:10px">'+bad+'</div>';return}
+  V.busy=true;cartView();
+  SB.rpc('place_order',{p:{name:F.name,phone:F.phone,address:F.address,province:F.province,note:F.note,pay:V.pay,coupon:V.cdisc?V.coupon:'',items:c.L.map(function(l){return{id:l.p.id,v:l.v,qty:l.q}})}}).then(function(r){
+    TOK.unshift(r.token);TOK=TOK.slice(0,40);lsSet('shop_tokens',TOK);
+    var lines=c.L.map(function(l){return{name:lineName(l.p,l.v),qty:l.q,price:eff(l.p)}});
+    CART={};save();V.busy=false;V.coupon='';V.cdisc=0;V.cmsg='';updCart();
+    var ov=$('#cartov');if(ov)ov.remove();success(r,lines,V.pay);init()
+  }).catch(function(e){V.busy=false;cartView();$('#cerr').innerHTML='<div class="err" style="margin-top:10px">'+esc(e.message)+'</div>'})
+}
+function slipLink(no,total){
+  var num=String(ST.wa||'').replace(/\D/g,'');if(num.length<8)return'';
+  return'https://wa.me/'+num+'?text='+encodeURIComponent('ສະບາຍດີ, ຂ້ອຍໂອນເງິນແລ້ວ ເລກອໍເດີ '+no+' ຍອດ '+money(total)+' (ແນບສະລິບ)')
+}
+function banksOf(){
+  if(Array.isArray(ST.banks)&&ST.banks.length){var b=ST.banks.filter(function(x){return x&&(x.qr||x.info||x.name)});if(b.length)return b}
+  return(ST.qr||ST.pay)?[{name:'',info:ST.pay||'',qr:ST.qr||''}]:[]
+}
+function qrBox(total){
+  var B=banksOf(),t=total==null?'':total;
+  if(!B.length)return'<div class="hint" style="margin-top:8px">ຮ້ານຈະສົ່ງເລກບັນຊີໃຫ້ທາງ WhatsApp ຫຼັງຮັບອໍເດີ</div>';
+  var k=Math.min(V.bank||0,B.length-1),b=B[k];
+  return'<div class="qrwrap" data-t="'+esc(t)+'">'+(B.length>1?'<div class="sm muted" style="margin-top:10px">ເລືອກທະນາຄານທີ່ຕ້ອງການໂອນ</div><div class="chips" style="flex-wrap:wrap;overflow:visible;margin-top:6px">'+B.map(function(x,i){return'<button type="button" class="chip" data-bank="'+i+'" aria-pressed="'+(i===k)+'">'+esc(x.name||('ບັນຊີ '+(i+1)))+'</button>'}).join('')+'</div>':'')+
+  '<div class="qrbox">'+(total!=null?'<div>ໂອນຍອດ <b>'+money(total)+'</b></div>':'<div class="sm muted">ສະແກນ QR ເພື່ອໂອນ (ໂອນຕາມຍອດລວມທີ່ສະແດງ)</div>')+
+    (B.length===1&&b.name?'<div><b>'+esc(b.name)+'</b></div>':'')+
+    (b.qr?'<img src="'+esc(b.qr)+'" alt="QR ໂອນເງິນ '+esc(b.name)+'"><a class="btn sm" download="qr-'+esc((b.name||'transfer').replace(/[^\w\u0E80-\u0EFF-]+/g,'_'))+'.png" href="'+esc(b.qr)+'">⬇ ບັນທຶກຮູບ QR</a>':'')+
+    (b.info?'<div class="pre">'+esc(b.info)+'</div>':'')+'</div></div>'
+}
+function waLink(r,lines){
+  var num=String(ST.wa||'').replace(/\D/g,'');if(num.length<8)return'';
+  var t='ສະບາຍດີ, ຂ້ອຍສັ່ງຊື້ ເລກອໍເດີ '+r.no+'\n'+lines.map(function(l){return'• '+l.name+' × '+l.qty}).join('\n')+'\nລວມ '+money(r.total)+'\nຊື່: '+F.name+'\nໂທ: '+F.phone+'\nແຂວງ: '+F.province+(F.address?'\nທີ່ຢູ່: '+F.address:'');
+  return'https://wa.me/'+num+'?text='+encodeURIComponent(t)
+}
+function success(r,lines,pm){
+  var w=waLink(r,lines),sl=slipLink(r.no,r.total);
+  modal('<div class="empty" style="padding:10px 0"><div style="font-size:48px">✅</div><h2>ສັ່ງຊື້ສຳເລັດ!</h2><p>ເລກອໍເດີ <b>'+esc(r.no)+'</b><br>ຍອດລວມ <b>'+money(r.total)+'</b></p><p class="sm">ຮ້ານຈະຕິດຕໍ່ຢືນຢັນທາງເບີທີ່ທ່ານໃຫ້ໄວ້. ຕິດຕາມສະຖານະໄດ້ທີ່ປຸ່ມ “ອໍເດີຂອງຂ້ອຍ”.</p></div>'+(pm==='transfer'?qrBox(r.total):'')+'<div class="col" style="margin-top:12px">'+
+    (pm==='transfer'&&sl?'<a class="btn wa big" target="_blank" rel="noopener" href="'+esc(sl)+'">ສົ່ງສະລິບໂອນທາງ WhatsApp</a>':'')+
+    (pm!=='transfer'&&w?'<a class="btn wa big" target="_blank" rel="noopener" href="'+esc(w)+'">ແຈ້ງຮ້ານທາງ WhatsApp (ບໍ່ບັງຄັບ)</a>':'')+
+    '<button class="btn primary big" id="goOrders">ເບິ່ງອໍເດີຂອງຂ້ອຍ</button><button class="btn big" data-close>ສັ່ງຊື້ຕໍ່</button></div>')
+}
+// ---- my orders ----
+function loadOrders(){
+  if(!TOK.length){V.orders=[];render();return}
+  SB.rpc('my_orders',{tokens:TOK}).then(function(r){V.orders=r||[];if(V.view==='orders')renderOrders()}).catch(function(e){V.orders=V.orders||[];V.loadErr2=e.message;if(V.view==='orders')renderOrders()})
+}
+var STEPS=['new','confirmed','shipped','done'];
+function renderOrders(){
+  var app=$('#app');
+  var h='<div class="row" style="margin-bottom:10px"><button class="btn sm" id="back">← ກັບໄປຮ້ານ</button><h2 style="font-size:19px">ອໍເດີຂອງຂ້ອຍ</h2></div>';
+  h+='<details class="card" id="lkbox" style="margin-bottom:12px"'+((V.lkOpen||(V.orders&&!V.orders.length))?' open':'')+'><summary>🔎 ຄົ້ນຫາອໍເດີ ດ້ວຍເລກອໍເດີ + ເບີໂທ</summary><div class="col" style="margin-top:8px"><div class="sm muted">ໃຊ້ເມື່ອປ່ຽນມືຖື ຫຼື ລ້າງເບຣົາເຊີ ແລ້ວບໍ່ເຫັນອໍເດີເກົ່າ. ເລກອໍເດີຢູ່ໃນຂໍ້ຄວາມທີ່ຮ້ານສົ່ງໃຫ້ ຫຼື ໜ້າ “ສັ່ງຊື້ສຳເລັດ”.</div><label>ເລກອໍເດີ<input id="lkNo" value="'+esc(V.lkNo||'')+'" placeholder="W261013-AB12" autocapitalize="characters" autocomplete="off"></label><label>ເບີໂທທີ່ໃຊ້ສັ່ງ<input id="lkPhone" type="tel" inputmode="tel" value="'+esc(V.lkPhone||'')+'" placeholder="020 XXXX XXXX"></label><div id="lkErr"></div><button class="btn primary" id="lkGo" type="button">ຄົ້ນຫາ</button></div></details>';
+  if(V.orders==null)h+='<div class="empty"><span class="spin"></span></div>';
+  else if(!V.orders.length)h+='<div class="empty">ຍັງບໍ່ມີອໍເດີໃນເຄື່ອງນີ້<br><span class="sm">ອໍເດີຈະສະແດງຢູ່ໃນເບຣາວເຊີທີ່ທ່ານໃຊ້ສັ່ງ</span></div>';
+  else h+='<div class="col">'+V.orders.map(function(o){
+    var idx=STEPS.indexOf(o.status),can=o.status==='cancelled';
+    return'<div class="card oc"><div class="row"><b>'+esc(o.no)+'</b><span class="badge b-'+o.status+'">'+STATUS[o.status]+'</span><span class="sp"></span><span class="sm muted">'+fmtDate(o.created_at)+'</span></div>'+
+    (can?'':'<div><div class="stepper">'+STEPS.map(function(s,i){return'<i class="'+(i<=idx?'on':'')+'"></i>'}).join('')+'</div><div class="stlab">'+STEPS.map(function(s,i){return'<span class="'+(i===idx?'on':'')+'">'+STATUS[s]+'</span>'}).join('')+'</div></div>')+
+    '<div class="sm">'+(o.items||[]).map(function(i){return esc(i.name)+' × '+i.qty}).join('<br>')+'</div>'+
+    '<div class="sm muted">'+(o.pay==='cod'?'ເກັບເງິນປາຍທາງ':'ໂອນເງິນ')+(o.paid?' · ຊຳລະແລ້ວ':'')+' · ສົ່ງໄປ '+esc(o.province)+'</div>'+
+    (o.edited_at?'<div class="sm muted">✏️ ຮ້ານໄດ້ປັບປຸງລາຍລະອຽດອໍເດີນີ້ແລ້ວ</div>':'')+
+    (o.tracking||o.carrier?'<div class="okbox">🚚 '+esc(o.carrier)+' '+esc(o.tracking)+'</div>':'')+
+    '<div class="tot g"><span>ລວມ</span><span>'+money(o.total)+'</span></div>'+
+    (o.pay==='transfer'&&!o.paid&&o.status!=='cancelled'?'<button class="btn primary sm" data-qr="'+esc(o.no)+'">ເບິ່ງ QR ໂອນເງິນ</button>':'')+(o.status==='new'?'<button class="btn danger sm" data-cancel="'+esc(o.token)+'">ຍົກເລີກອໍເດີ</button>':'')+'</div>'}).join('')+'</div>';
+  if(V.loadErr2)h+='<div class="err" style="margin-top:10px">'+esc(V.loadErr2)+'</div>';
+  app.innerHTML=h
+}
+// ---- product detail / share ----
+var PV={id:'',v:'',i:0},PIMG={};
+function prodUrl(id){var b=location.href.split('#')[0].split('?')[0];return b+'?p='+encodeURIComponent(id)}
+function copyText(t){function fb(){var a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('ຄັດລອກລິ້ງແລ້ວ')}catch(e){toast('ຄັດລອກບໍ່ໄດ້ — ກົດຄ້າງທີ່ລິ້ງໃນແຖບທີ່ຢູ່',true)}a.remove()}
+  try{navigator.clipboard.writeText(t).then(function(){toast('ຄັດລອກລິ້ງແລ້ວ')},fb)}catch(e){fb()}}
+function openProduct(id){
+  var p=byId[id];if(!p){toast('ບໍ່ພົບສິນຄ້ານີ້ (ອາດປິດຂາຍແລ້ວ)',true);return}
+  PV={id:id,v:'',i:0};
+  var ex=$('#pdov');if(ex)ex.remove();
+  var o=modal('<div id="pdm"></div>','wide');o.id='pdov';prodView();
+  if(PIMG[id]===undefined){PIMG[id]=null;SB.select('product_images','select=img&product_id=eq.'+id+'&order=pos.asc').then(function(r){PIMG[id]=(r||[]).map(function(x){return x.img});if($('#pdm')&&PV.id===id)prodView()}).catch(function(){PIMG[id]=[]})}
+}
+function prodView(){
+  var el=$('#pdm');if(!el)return;var p=byId[PV.id];if(!p){var ov=el.closest('.ov');if(ov)ov.remove();return}
+  var imgs=[];if(p.img)imgs.push(p.img);(PIMG[p.id]||[]).forEach(function(x){imgs.push(x)});
+  if(PV.i>=imgs.length)PV.i=0;
+  var sale=p.sale>0&&p.sale<p.price,hv=hasV(p),lab=p.opt_label||'ຕົວເລືອກ';
+  var st=hv?(PV.v?stockOf(p,PV.v):null):p.stock,key=kOf(p.id,PV.v),inCart=CART[key]||0,n=calc().n;
+  var h='<div class="mh"><h2>'+esc(p.name)+'</h2><button class="x" data-close aria-label="ປິດ">×</button></div>';
+  h+='<div class="gal"><div class="big">'+(imgs.length?'<img alt="'+esc(p.name)+'" src="'+esc(imgs[PV.i])+'">':'<span>'+esc((p.name||'?').charAt(0))+'</span>')+'</div>';
+  if(imgs.length>1)h+='<div class="thumbs">'+imgs.map(function(s,i){return'<button class="th'+(i===PV.i?' on':'')+'" data-pi="'+i+'" aria-label="ຮູບທີ '+(i+1)+'"><img alt="" src="'+esc(s)+'"></button>'}).join('')+'</div>';
+  h+='</div>';
+  h+='<div class="pr" style="margin:12px 0 4px"><b style="font-size:22px">'+money(eff(p))+'</b>'+(sale?'<s>'+money(p.price)+'</s><span class="badge b-hot">-'+Math.round((1-p.sale/p.price)*100)+'%</span>':'')+'</div>';
+  if(p.category)h+='<div class="sm muted">'+esc(p.category)+'</div>';
+  if(p.descr)h+='<p style="margin:8px 0;white-space:pre-wrap">'+esc(p.descr)+'</p>';
+  if(hv)h+='<div style="margin:10px 0 6px;font-weight:600">'+esc(lab)+(PV.v?'':' <span class="sm muted">(ກະລຸນາເລືອກ)</span>')+'</div><div class="chips" style="flex-wrap:wrap;overflow:visible">'+p.variants.map(function(x){var s=Math.max(0,Number(x.stock)||0);return'<button class="chip" data-pv="'+esc(x.name)+'" aria-pressed="'+(PV.v===x.name)+'"'+(s<=0?' disabled':'')+'>'+esc(x.name)+(s<=0?' (ໝົດ)':'')+'</button>'}).join('')+'</div>';
+  if(st!=null&&st>0&&st<=(p.low||5))h+='<div class="sm" style="color:var(--warn);margin-top:6px">ເຫຼືອ '+st+' ອັນ</div>';
+  h+='<div class="col" style="margin-top:12px">';
+  if(p.stock<=0)h+='<button class="btn big" disabled>ສິນຄ້າໝົດ</button>';
+  else if(hv&&!PV.v)h+='<button class="btn big" disabled>ເລືອກ'+esc(lab)+'ກ່ອນ</button>';
+  else if(inCart)h+='<div class="qty" style="min-height:48px"><button data-dec="'+esc(key)+'" aria-label="ຫຼຸດ">−</button><b>'+inCart+' ໃນກະຕ່າ</b><button data-inc="'+esc(key)+'" aria-label="ເພີ່ມ">+</button></div>';
+  else h+='<button class="btn primary big" data-add="'+esc(key)+'">+ ໃສ່ກະຕ່າ</button>';
+  if(n)h+='<button class="btn big" id="pdCart">🛒 ເບິ່ງກະຕ່າ ('+n+')</button>';
+  h+='</div>';
+  var url=prodUrl(p.id),msg=p.name+' — '+money(eff(p));
+  h+='<div class="row" style="flex-wrap:wrap;margin-top:14px;gap:8px"><span class="sm muted">ແຊຣ໌ສິນຄ້ານີ້:</span>'+(navigator.share?'<button class="btn sm" data-share="1">📤 ແຊຣ໌</button>':'')+'<button class="btn sm" data-copy="1">🔗 ຄັດລອກລິ້ງ</button><a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/?text='+encodeURIComponent(msg+'\n'+url)+'">WhatsApp</a><a class="btn sm" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(url)+'">Facebook</a></div>';
+  var sc=el.closest('.md')?el.closest('.md').scrollTop:0;
+  el.innerHTML=h;if(el.closest('.md'))el.closest('.md').scrollTop=sc
+}
+function openLinked(){
+  if(V.linkDone)return;V.linkDone=true;
+  var pp=null;try{pp=new URLSearchParams(location.search).get('p')}catch(e){}
+  if(!pp)return;
+  openProduct(pp);
+  try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
+}
+// ---- lookup order by number + phone ----
+function lookup(){
+  var no=(V.lkNo||'').trim(),ph=(V.lkPhone||'').trim(),er=$('#lkErr'),b=$('#lkGo');
+  if(!no||ph.replace(/\D/g,'').length<8){er.innerHTML='<div class="err">ກະລຸນາໃສ່ເລກອໍເດີ ແລະ ເບີໂທໃຫ້ຄົບ</div>';return}
+  b.disabled=true;b.textContent='ກຳລັງຄົ້ນຫາ…';er.innerHTML='';
+  SB.rpc('lookup_order',{p_no:no,p_phone:ph}).then(function(r){
+    if(!r){b.disabled=false;b.textContent='ຄົ້ນຫາ';er.innerHTML='<div class="err">ບໍ່ພົບອໍເດີ — ກວດເລກອໍເດີ ແລະ ເບີໂທທີ່ໃຊ້ສັ່ງອີກຄັ້ງ</div>';return}
+    if(TOK.indexOf(r.token)<0){TOK.unshift(r.token);TOK=TOK.slice(0,40);lsSet('shop_tokens',TOK)}
+    V.lkNo='';V.lkPhone='';V.lkOpen=false;V.orders=null;renderOrders();loadOrders();toast('ພົບອໍເດີ '+r.no+' ແລ້ວ')
+  }).catch(function(e){b.disabled=false;b.textContent='ຄົ້ນຫາ';er.innerHTML='<div class="err">'+esc(e.message)+'</div>'})
+}
+// ---- events ----
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-add],[data-inc],[data-dec],[data-tab],[data-cat],[data-close],[data-cancel],[data-qr],[data-bank],[data-view],[data-pv],[data-pi],[data-share],[data-copy],#pdCart,#lkGo,#bCart,#bOrders,#back,#bPlace,#bCoupon,#goOrders');if(!t)return;
+  if(t.hasAttribute('data-bank')){V.bank=Number(t.dataset.bank)||0;document.querySelectorAll('.qrwrap').forEach(function(w){var tt=w.dataset.t;w.outerHTML=qrBox(tt===''?null:Number(tt))});return}
+  if(t.hasAttribute('data-view')){openProduct(t.dataset.view);return}
+  if(t.hasAttribute('data-pv')){PV.v=(PV.v===t.dataset.pv?'':t.dataset.pv);prodView();return}
+  if(t.hasAttribute('data-pi')){PV.i=Number(t.dataset.pi)||0;prodView();return}
+  if(t.hasAttribute('data-copy')){copyText(prodUrl(PV.id));return}
+  if(t.hasAttribute('data-share')){var sp=byId[PV.id];if(sp&&navigator.share)navigator.share({title:sp.name,text:sp.name+' — '+money(eff(sp)),url:prodUrl(sp.id)}).catch(function(){});return}
+  if(t.id==='pdCart'){var pv=$('#pdov');if(pv)pv.remove();openCart();return}
+  if(t.id==='lkGo'){lookup();return}
+  if(t.dataset.add)setQ(t.dataset.add,1);
+  else if(t.dataset.inc)setQ(t.dataset.inc,(CART[t.dataset.inc]||0)+1);
+  else if(t.dataset.dec)setQ(t.dataset.dec,(CART[t.dataset.dec]||0)-1);
+  else if(t.dataset.tab!=null&&t.hasAttribute('data-tab')){V.tab=t.dataset.tab;render()}
+  else if(t.hasAttribute('data-cat')){V.cat=t.dataset.cat;render()}
+  else if(t.hasAttribute('data-close')){var o=t.closest('.ov');if(o)o.remove()}
+  else if(t.dataset.qr){var oo=(V.orders||[]).find(function(x){return x.no===t.dataset.qr});if(oo){var sl2=slipLink(oo.no,oo.total);modal('<div class="mh"><h2>ໂອນເງິນ '+esc(oo.no)+'</h2><button class="x" data-close aria-label="ປິດ">×</button></div>'+qrBox(oo.total)+(sl2?'<a class="btn wa big" style="margin-top:12px" target="_blank" rel="noopener" href="'+esc(sl2)+'">ສົ່ງສະລິບໂອນທາງ WhatsApp</a>':''))}}
+  else if(t.dataset.cancel){
+    if(!t.classList.contains('sure')){t.classList.add('sure');t.textContent='ກົດອີກຄັ້ງເພື່ອຢືນຢັນຍົກເລີກ';return}
+    t.disabled=true;SB.rpc('cancel_order',{p_token:t.dataset.cancel}).then(function(ok){toast(ok?'ຍົກເລີກແລ້ວ':'ຍົກເລີກບໍ່ໄດ້ ຮ້ານຢືນຢັນອໍເດີແລ້ວ',!ok);loadOrders()}).catch(function(er){toast(er.message,true);t.disabled=false})}
+  else if(t.id==='bCart')openCart();
+  else if(t.id==='bOrders'||t.id==='goOrders'){document.querySelectorAll('.ov').forEach(function(o){o.remove()});V.view='orders';V.orders=null;render();loadOrders();window.scrollTo(0,0)}
+  else if(t.id==='back'){V.view='shop';render()}
+  else if(t.id==='bPlace')place();
+  else if(t.id==='bCoupon'){V.coupon=($('#fCoupon').value||'').trim();readForm();checkCoupon(false)}
+});
+document.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.im[data-view]')){e.preventDefault();openProduct(e.target.dataset.view)}});
+document.addEventListener('input',function(e){
+  var t=e.target;
+  if(t.id==='q'){V.q=t.value;if(V.view!=='shop'){V.view='shop'}render()}
+  else if(t.id==='fCoupon'){V.coupon=t.value.trim();V.cdisc=0;V.cmsg=''}
+  else if(t.id==='lkNo'){V.lkNo=t.value;V.lkOpen=true}
+  else if(t.id==='lkPhone'){V.lkPhone=t.value;V.lkOpen=true}
+  else if(['fName','fPhone','fAddr','fNote'].indexOf(t.id)>=0)readForm();
+});
+document.addEventListener('change',function(e){
+  var t=e.target;
+  if(t.id==='sort'){V.sort=t.value;render()}
+  else if(t.id==='fProv'){readForm();cartView()}
+  else if(t.name==='pay'){readForm();V.pay=t.value;cartView()}
+});
+setInterval(function(){var a=document.activeElement;if(V.view==='orders'&&!document.querySelector('.ov')&&TOK.length&&!(a&&/INPUT|TEXTAREA/.test(a.tagName)))loadOrders()},30000);
+init();
+})();
+</script>
+</body>
+</html>
