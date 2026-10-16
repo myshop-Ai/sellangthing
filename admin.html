@@ -185,6 +185,16 @@ var SB=(function(){
     update:function(t,match,row){return req('PATCH','/rest/v1/'+t+'?'+match,row,REP)},
     del:function(t,match){return req('DELETE','/rest/v1/'+t+'?'+match,undefined,{Prefer:'return=minimal'})},
     rpc:function(fn,args){return req('POST','/rest/v1/rpc/'+fn,args||{})},
+    upload:function(bucket,name,blob){
+      var pre=(sess&&sess.expires_at-60<Date.now()/1000)?refresh():Promise.resolve();
+      return pre.then(function(){
+        var h={apikey:SB_KEY,'x-upsert':'true','Content-Type':blob.type||'image/jpeg'};if(sess)h.Authorization='Bearer '+sess.access_token;
+        return fetch(SB_URL+'/storage/v1/object/'+bucket+'/'+name,{method:'POST',headers:h,body:blob})
+      }).then(function(r){return r.text().then(function(t){
+        var j=null;try{j=JSON.parse(t)}catch(e){}
+        if(!r.ok)throw new Error((j&&(j.message||j.error))||('ອັບໂຫຼດຮູບບໍ່ໄດ້ ('+r.status+')'));
+        return SB_URL+'/storage/v1/object/public/'+bucket+'/'+name})},function(){throw new Error('ເຊື່ອມຕໍ່ອິນເຕີເນັດບໍ່ໄດ້')})
+    },
     login:function(email,pw){
       return fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})})
         .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error_description||j.msg||j.message||'ອີເມວ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກ');save(pack(j))})},function(){throw new Error('ເຊື່ອມຕໍ່ອິນເຕີເນັດບໍ່ໄດ້')})
@@ -201,7 +211,7 @@ function modal(html,cls){
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){var o=document.querySelectorAll('.ov');if(o.length)o[o.length-1].remove()}});
 
 (function(){
-var ORD=[],PRD=[],CPN=[],ST={},GS={},GSOK=true,U4OK=true,A={tab:'over',of:'new',oq:'',pq:'',pf:'all',cq:''},lastNew=-1,timer=null,root=$('#root');
+var ORD=[],PRD=[],CPN=[],ST={},GS={},GSOK=true,U4OK=true,U5OK=true,SIGK='',SOK=true,A={tab:'over',of:'new',oq:'',pq:'',pf:'all',cq:''},lastNew=-1,timer=null,root=$('#root');
 var TABS=[['over','ພາບລວມ'],['ord','Order'],['prd','ສິນຄ້າ'],['promo','ໂປຣໂມຊັນ'],['cus','ລູກຄ້າ'],['rep','ລາຍງານ'],['set','ຕັ້ງຄ່າ']];
 function waNum(p){var d=String(p||'').replace(/\D/g,'');if(d.indexOf('856')===0)return d;if(d.charAt(0)==='0')d=d.slice(1);return'856'+d}
 function copy(t){try{navigator.clipboard.writeText(t).then(function(){toast('ສຳເນົາແລ້ວ')},fb)}catch(e){fb()}function fb(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('ສຳເນົາແລ້ວ')}catch(e){toast('ສຳເນົາບໍ່ໄດ້',true)}a.remove()}}
@@ -238,17 +248,61 @@ function start(){
 }
 function mergeCost(ps,cs){var m={};cs.forEach(function(c){m[c.product_id]=c.cost});ps.forEach(function(p){p.cost=Number(m[p.id])||0});return ps}
 function loadAll(){
-  return Promise.all([SB.select('orders','select=*&order=created_at.desc&limit=1000'),SB.select('products','select=*&order=created_at.desc'),SB.select('coupons','select=*&order=created_at.desc'),SB.select('settings','select=data&id=eq.1'),SB.select('product_costs','select=*'),SB.select('admin_settings','select=data&id=eq.1').then(function(x){GSOK=true;return x},function(){GSOK=false;return[]}),SB.select('product_images','select=product_id&limit=1').then(function(){U4OK=true},function(){U4OK=false})]).then(function(r){
+  return Promise.all([SB.select('orders','select=*&order=created_at.desc&limit=1000'),SB.select('products','select=*&order=created_at.desc'),SB.select('coupons','select=*&order=created_at.desc'),SB.select('settings','select=data&id=eq.1'),SB.select('product_costs','select=*'),SB.select('admin_settings','select=data&id=eq.1').then(function(x){GSOK=true;return x},function(){GSOK=false;return[]}),SB.select('product_images','select=product_id&limit=1').then(function(){U4OK=true},function(){U4OK=false}),SB.rpc('admin_sig').then(function(x){U5OK=true;SIGK=JSON.stringify(x)},function(){U5OK=false})]).then(function(r){
     GS=(r[5]&&r[5][0]&&r[5][0].data)||{};ORD=r[0]||[];PRD=mergeCost(r[1]||[],r[4]||[]);CPN=r[2]||[];ST=(r[3]&&r[3][0]&&r[3][0].data)||{}})
 }
 function poll(){
-  Promise.all([SB.select('orders','select=*&order=created_at.desc&limit=1000'),SB.select('products','select=*&order=created_at.desc'),SB.select('product_costs','select=*')]).then(function(r){
+  if(document.hidden)return;
+  if(!U5OK)return pollFull();
+  return SB.rpc('admin_sig').then(function(x){var k=JSON.stringify(x);if(k===SIGK)return;SIGK=k;return pollFull()},function(e){if(/ເຂົ້າລະບົບ|JWT|expired/i.test(e.message)){SB.logout();showLogin('ໝົດເວລາ ກະລຸນາເຂົ້າສູ່ລະບົບໃໝ່');return}U5OK=false;return pollFull()})
+}
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&timer)poll()});
+function pollFull(){
+  return Promise.all([SB.select('orders','select=*&order=created_at.desc&limit=1000'),SB.select('products','select=*&order=created_at.desc'),SB.select('product_costs','select=*')]).then(function(r){
     ORD=r[0]||[];PRD=mergeCost(r[1]||[],r[2]||[]);var n=newCount();
     if(lastNew>=0&&n>lastNew){toast('🔔 ມີອໍເດີໃໝ່!');beep()}
     lastNew=n;badges();
     var busy=document.querySelector('.ov')||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
     if(!busy&&A.tab!=='set')view()
   }).catch(function(e){if(/ເຂົ້າລະບົບ|JWT|expired/i.test(e.message)){SB.logout();showLogin('ໝົດເວລາ ກະລຸນາເຂົ້າສູ່ລະບົບໃໝ່')}})
+}
+// ---------- ຮູບ → Supabase Storage ----------
+function dataBlob(d){var m=/^data:([^;,]+)(;base64)?,([\s\S]*)$/.exec(d||'');if(!m)throw new Error('ຮູບບໍ່ຖືກຮູບແບບ');var bin=m[2]?atob(m[3]):decodeURIComponent(m[3]),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:m[1]})}
+function uid(){try{return crypto.randomUUID()}catch(e){return Date.now().toString(36)+Math.random().toString(36).slice(2,10)}}
+function putImg(d){var b=dataBlob(d),ext={'image/png':'png','image/webp':'webp'}[b.type]||'jpg';return SB.upload('product-images',uid()+'.'+ext,b)}
+function toStore(d){if(!/^data:image\//.test(d||''))return Promise.resolve(d);return putImg(d).catch(function(e){SOK=false;return d})}
+function legacyCount(){return PRD.filter(function(p){return /^data:/.test(p.img||'')}).length}
+function migBind(){
+  var info=$('#mgInfo'),go=$('#mgGo'),msg=$('#mgMsg');if(!info||!go)return;
+  function paint(){
+    var n=legacyCount();
+    if(!U5OK){info.innerHTML='ຕ້ອງແລ່ນ update-5.sql ໃນ Supabase ກ່ອນ ຈຶ່ງຈະໃຊ້ Storage ໄດ້';go.disabled=true;return}
+    info.innerHTML=n?('ມີ <b>'+n+'</b> ສິນຄ້າທີ່ຮູບຍັງເກັບໃນຖານຂໍ້ມູນ (ເຮັດໃຫ້ໜ້າຮ້ານໂຫຼດຊ້າເມື່ອມີສິນຄ້າຫຼາຍ). ກົດປຸ່ມເພື່ອຍ້າຍ — ຮູບໃໝ່ທີ່ອັບໂຫຼດຈາກນີ້ຈະເຂົ້າ Storage ອັດຕະໂນມັດ.'):'✅ ຮູບສິນຄ້າທັງໝົດຢູ່ໃນ Storage ແລ້ວ';
+    go.disabled=false;go.style.display=''
+  }
+  paint();
+  go.onclick=function(){
+    go.disabled=true;var done=0,fail=0;
+    function say(t,cls){msg.innerHTML='<div class="'+(cls||'hint')+'">'+t+'</div>'}
+    var mains=PRD.filter(function(p){return /^data:/.test(p.img||'')});
+    function runMain(i){
+      if(i>=mains.length)return Promise.resolve();
+      say('ກຳລັງຍ້າຍຮູບຫຼັກ '+(i+1)+'/'+mains.length+'…');
+      return putImg(mains[i].img).then(function(u){return SB.update('products','id=eq.'+mains[i].id,{img:u})}).then(function(){done++},function(e){fail++;if(fail===1)say('ຜິດພາດ: '+esc(e.message),'err')}).then(function(){return runMain(i+1)})
+    }
+    function runExtra(){
+      if(!U4OK)return Promise.resolve();
+      return SB.select('product_images','select=id&img=like.data:*').then(function(rows){
+        var ids=(rows||[]).map(function(r){return r.id});
+        function one(i){
+          if(i>=ids.length)return Promise.resolve();
+          say('ກຳລັງຍ້າຍຮູບເພີ່ມເຕີມ '+(i+1)+'/'+ids.length+'…');
+          return SB.select('product_images','select=img&id=eq.'+ids[i]).then(function(r){return putImg(r[0].img)}).then(function(u){return SB.update('product_images','id=eq.'+ids[i],{img:u})}).then(function(){done++},function(e){fail++}).then(function(){return one(i+1)})
+        }
+        return one(0)})
+    }
+    runMain(0).then(runExtra).then(function(){return loadAll()}).then(function(){badges();paint();say(fail?('ຍ້າຍແລ້ວ '+done+' ຮູບ, ຜິດພາດ '+fail+' ຮູບ — ລອງກົດອີກຄັ້ງ'):('✅ ຍ້າຍແລ້ວ '+done+' ຮູບ'),fail?'err':'okbox')}).catch(function(e){say('ຜິດພາດ: '+esc(e.message),'err');go.disabled=false})
+  }
 }
 function beep(){try{var c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.08;o.start();setTimeout(function(){o.stop();c.close()},220)}catch(e){}}
 // ---------- shell ----------
@@ -441,7 +495,7 @@ function prdModal(id){
   drawV();drawX();
   if(id&&U4OK)SB.select('product_images','select=img&product_id=eq.'+id+'&order=pos.asc').then(function(r){extra=(r||[]).map(function(x){return x.img});xLoaded=true;drawX()}).catch(function(e){xErr='ໂຫຼດຮູບເພີ່ມເຕີມບໍ່ໄດ້: '+e.message;drawX()});
   if(id)g('plink').onclick=function(){var u=productLink(id);if(location.protocol==='file:'){toast('ລິ້ງນີ້ຈະໃຊ້ໄດ້ຫຼັງເອົາເວັບຂຶ້ນ Netlify (ຕອນນີ້ເປີດຈາກໄຟລ໌ໃນເຄື່ອງ)',true);return}copy(u)};
-  g('pf').onchange=function(e){var f=e.target.files[0];if(!f)return;resize(f,480).then(function(d){img=d;g('pv').innerHTML='<img alt="" src="'+d+'">'}).catch(function(){toast('ອ່ານຮູບບໍ່ໄດ້',true)})};
+  g('pf').onchange=function(e){var f=e.target.files[0];if(!f)return;resize(f,640).then(function(d){img=d;g('pv').innerHTML='<img alt="" src="'+d+'">'}).catch(function(){toast('ອ່ານຮູບບໍ່ໄດ້',true)})};
   g('pfx').onclick=function(){img='';g('pv').textContent='ບໍ່ມີຮູບ'};
   g('xf').onchange=function(e){var fs=Array.prototype.slice.call(e.target.files).slice(0,5-extra.length);e.target.value='';if(!fs.length)return;Promise.all(fs.map(function(f){return resize(f,800)})).then(function(a){a.forEach(function(d){if(extra.length<5)extra.push(d)});xDirty=true;drawX()}).catch(function(){toast('ອ່ານຮູບບໍ່ໄດ້',true)})};
   m.addEventListener('input',function(e){var t=e.target;if(t.classList.contains('vn1'))vars[+t.dataset.i].name=t.value;else if(t.classList.contains('vs1')){vars[+t.dataset.i].stock=Math.max(0,parseInt(t.value)||0);syncStock()}});
@@ -458,9 +512,9 @@ function prdModal(id){
       row.stock=vars.reduce(function(s,x){return s+x.stock},0)}
     if(vars.length||hadV){row.variants=vars.map(function(x){return{name:x.name,stock:x.stock}});row.opt_label=g('ol').value.trim()}
     this.disabled=true;var b=this,pid=id,cost=Number(g('a5').value)||0;
-    (id?SB.update('products','id=eq.'+id,row):SB.insert('products',row)).then(function(r){pid=id||(r&&r[0]&&r[0].id);return SB.upsert('product_costs',{product_id:pid,cost:cost},'product_id')})
+    SOK=true;toStore(row.img).then(function(u){row.img=u;return xLoaded&&xDirty?Promise.all(extra.map(toStore)):null}).then(function(xs){if(xs)extra=xs;return id?SB.update('products','id=eq.'+id,row):SB.insert('products',row)}).then(function(r){pid=id||(r&&r[0]&&r[0].id);return SB.upsert('product_costs',{product_id:pid,cost:cost},'product_id')})
      .then(function(){if(xLoaded&&xDirty)return SB.del('product_images','product_id=eq.'+pid).then(function(){return extra.length?SB.insert('product_images',extra.map(function(s,i){return{product_id:pid,pos:i,img:s}})):null})})
-     .then(function(){return loadAll()}).then(function(){m.remove();view();toast('ບັນທຶກແລ້ວ')}).catch(function(e){b.disabled=false;err(esc(/variants|opt_label|product_images/.test(e.message)?'ຕ້ອງແລ່ນ update-4.sql ໃນ Supabase ກ່ອນ ('+e.message+')':e.message))})
+     .then(function(){return loadAll()}).then(function(){m.remove();view();toast(SOK?'ບັນທຶກແລ້ວ':'ບັນທຶກແລ້ວ ⚠️ ຮູບຍັງເກັບໃນຖານຂໍ້ມູນ — ແລ່ນ update-5.sql ເພື່ອໃຫ້ເວັບໄວ',!SOK)}).catch(function(e){b.disabled=false;err(esc(/variants|opt_label|product_images/.test(e.message)?'ຕ້ອງແລ່ນ update-4.sql ໃນ Supabase ກ່ອນ ('+e.message+')':e.message))})
   };
   if(id)g('dl').onclick=function(){
     if(!this.classList.contains('sure')){this.classList.add('sure');this.textContent='ກົດອີກຄັ້ງເພື່ອລຶບຖາວອນ';return}
@@ -519,6 +573,7 @@ function vSet(v){
    '<label class="check"><input type="checkbox" id="t3"'+(GS.tgOn?' checked':'')+'> ເປີດແຈ້ງເຕືອນ ເມື່ອມີອໍເດີໃໝ່ / ລູກຄ້າຍົກເລີກ</label>'+
    '<div class="row" style="flex-wrap:wrap"><button class="btn sm" id="tFind" type="button">🔍 ຊອກ Chat ID</button><button class="btn sm" id="tTest" type="button">📨 ບັນທຶກ + ທົດສອບ</button></div><div id="tgMsg" style="margin-top:6px"></div>'+
    '<div class="sm muted">Token ເກັບໃນຖານຂໍ້ມູນສະເພາະແອັດມິນ (ລູກຄ້າບໍ່ເຫັນ). ຂໍ້ຄວາມຖືກສົ່ງຈາກເຊີບເວີ Supabase ເຖິງແມ່ນວ່າບໍ່ໄດ້ເປີດໜ້າແອັດມິນ.</div></div>'+
+   '<div class="card col" style="gap:8px"><h3 style="font-size:16px">🖼️ ຮູບສິນຄ້າ (ເຮັດໃຫ້ເວັບໄວ)</h3><div id="mgInfo" class="sm muted"></div><div class="row" style="flex-wrap:wrap"><button class="btn sm" id="mgGo" type="button">ຍ້າຍຮູບເກົ່າໄປ Storage</button></div><div id="mgMsg"></div></div>'+
    '<div id="merr"></div><button class="btn primary big" id="ss">ບັນທຶກການຕັ້ງຄ່າ</button></div>';
   var banks=banksOf().map(function(x){return{name:x.name||'',info:x.info||'',qr:x.qr||''}});
   function bkDraw(){
@@ -534,6 +589,7 @@ function vSet(v){
     if(b.hasAttribute('data-bkdel')){if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='ກົດອີກຄັ້ງເພື່ອລຶບ';return}banks.splice(+b.dataset.bkdel,1);bkDraw()}
     else if(b.hasAttribute('data-bkx')){banks[+b.dataset.bkx].qr='';bkDraw()}});
   $('#bkList').addEventListener('change',function(e){var t=e.target;if(!t.hasAttribute('data-bkf'))return;var f=t.files[0],i=+t.dataset.bkf;if(!f)return;resizePng(f,640).then(function(u){banks[i].qr=u;bkDraw();toast('ໂຫຼດ QR ແລ້ວ — ກົດບັນທຶກ')},function(){toast('ອ່ານຮູບບໍ່ໄດ້',true)})});
+  migBind();
   function tgFields(){return{tgToken:($('#t1').value||'').trim(),tgChat:($('#t2').value||'').trim(),tgOn:$('#t3').checked}}
   function tgMsg(cls,t){$('#tgMsg').innerHTML='<div class="'+cls+'">'+t+'</div>'}
   function tgPoll(id){return new Promise(function(res,rej){var n=0;(function go(){SB.rpc('admin_tg_result',{p_id:id}).then(function(r){if(r&&!r.pending)return res(r);if(++n>=10)return rej(new Error('ໝົດເວລາລໍຖ້າ Telegram ຕອບ — ລອງໃໝ່ອີກຄັ້ງ'));setTimeout(go,1200)}).catch(rej)})()})}
@@ -702,6 +758,8 @@ function goLiveItems(){return[
   ['ມີອໍເດີທົດລອງຜ່ານເວັບ ຢ່າງໜ້ອຍ 1 ຄັ້ງ',ORD.some(function(o){return o.source==='web'}),'ord'],
   ['ແລ່ນ update-2.sql ແລ້ວ (ຕາຕະລາງຕັ້ງຄ່າແອັດມິນ)',GSOK,'set'],
   ['ແລ່ນ update-4.sql ແລ້ວ (ຕົວເລືອກສິນຄ້າ, ຫຼາຍຮູບ, ແກ້ອໍເດີ, Telegram, ກັນສະແປມ)',U4OK,'set'],
+  ['ແລ່ນ update-5.sql ແລ້ວ (ຮູບໃນ Storage, ໜ້າຮ້ານໄວເມື່ອມີສິນຄ້າຫຼາຍ)',U5OK,'set'],
+  ['ຍ້າຍຮູບສິນຄ້າທັງໝົດໄປ Storage ແລ້ວ',U5OK&&legacyCount()===0,'set'],
   ['ຕັ້ງແຈ້ງເຕືອນ Telegram (ແນະນຳ ບໍ່ພາດອໍເດີເມື່ອປິດໜ້າແອັດມິນ)',!!(GS.tgToken&&GS.tgChat&&GS.tgOn),'set']]}
 function goLiveHtml(){
   var gl=ls('golive',{}),a=goLiveItems(),m=GOLIVE_MANUAL;
