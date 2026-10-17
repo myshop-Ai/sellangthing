@@ -100,6 +100,11 @@ main{padding-block:14px 80px}
 .bars{display:flex;align-items:flex-end;gap:2px;height:130px;padding-top:6px}
 .bars i{flex:1;min-width:2px;background:var(--brand);border-radius:3px 3px 0 0;display:block}
 .bars i.z{background:var(--line)}
+.bars.few{gap:10px;height:150px;justify-content:flex-start}
+.bars.few .bc{width:46px;flex:none;height:100%;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bars.few .bv{flex:1;min-height:0;width:100%;display:flex;align-items:flex-end}
+.bars.few .bv i{flex:none;width:100%;min-width:0}
+.bars.few .bc span{font-size:11px;color:var(--muted);white-space:nowrap}
 .bx{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
 .kpi small{color:var(--muted);font-size:12.5px;display:block}.kpi b{font-size:20px;line-height:1.3;display:block;overflow-wrap:anywhere}
@@ -181,6 +186,13 @@ var SB=(function(){
     },function(){throw new Error('ເຊື່ອມຕໍ່ອິນເຕີເນັດບໍ່ໄດ້')})
   }
   var REP={Prefer:'return=representation'};
+  function upErr(st,m){m=String(m||'').slice(0,160);
+  if(/bucket not found/i.test(m))return'ບໍ່ພົບ bucket product-images — ຕ້ອງແລ່ນ update-5.sql (ຫຼື update-7.sql) ໃນ Supabase';
+  if(/row-level security|policy|not authorized|unauthorized|forbidden|jwt/i.test(m)||st===401||st===403)return'Storage ບໍ່ອະນຸຍາດ — ແລ່ນ update-7.sql ໃນ Supabase ແລ້ວລອງໃໝ່ ('+st+': '+m+')';
+  if(/mime|content.?type/i.test(m))return'ຊະນິດໄຟລ໌ບໍ່ຮອງຮັບ ('+m+')';
+  if(/exceed|too large|size/i.test(m)||st===413)return'ໄຟລ໌ໃຫຍ່ເກີນກຳນົດ 2MB';
+  return'ອັບໂຫຼດຮູບບໍ່ໄດ້ ('+st+(m?': '+m:'')+')'}
+
   return{
     get session(){return sess},
     select:function(t,q){return req('GET','/rest/v1/'+t+'?'+(q||'select=*'))},
@@ -192,11 +204,11 @@ var SB=(function(){
     upload:function(bucket,name,blob){
       var pre=(sess&&sess.expires_at-60<Date.now()/1000)?refresh():Promise.resolve();
       return pre.then(function(){
-        var h={apikey:SB_KEY,'x-upsert':'true','Content-Type':blob.type||'image/jpeg'};if(sess)h.Authorization='Bearer '+sess.access_token;
+        var h={apikey:SB_KEY,'Content-Type':blob.type||'image/jpeg'};if(sess)h.Authorization='Bearer '+sess.access_token;
         return fetch(SB_URL+'/storage/v1/object/'+bucket+'/'+name,{method:'POST',headers:h,body:blob})
       }).then(function(r){return r.text().then(function(t){
         var j=null;try{j=JSON.parse(t)}catch(e){}
-        if(!r.ok)throw new Error((j&&(j.message||j.error))||('ອັບໂຫຼດຮູບບໍ່ໄດ້ ('+r.status+')'));
+        if(!r.ok)throw new Error(upErr(r.status,(j&&(j.message||j.error))||t));
         return SB_URL+'/storage/v1/object/public/'+bucket+'/'+name})},function(){throw new Error('ເຊື່ອມຕໍ່ອິນເຕີເນັດບໍ່ໄດ້')})
     },
     login:function(email,pw){
@@ -274,7 +286,7 @@ function pollFull(){
 function dataBlob(d){var m=/^data:([^;,]+)(;base64)?,([\s\S]*)$/.exec(d||'');if(!m)throw new Error('ຮູບບໍ່ຖືກຮູບແບບ');var bin=m[2]?atob(m[3]):decodeURIComponent(m[3]),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:m[1]})}
 function uid(){try{return crypto.randomUUID()}catch(e){return Date.now().toString(36)+Math.random().toString(36).slice(2,10)}}
 function putImg(d){var b=dataBlob(d),ext={'image/png':'png','image/webp':'webp'}[b.type]||'jpg';return SB.upload('product-images',uid()+'.'+ext,b)}
-function toStore(d){if(!/^data:image\//.test(d||''))return Promise.resolve(d);return putImg(d).catch(function(e){SOK=false;return d})}
+function toStore(d){if(!/^data:image\//.test(d||''))return Promise.resolve(d);return putImg(d).catch(function(e){SOK=false;toast('ອັບໂຫຼດຮູບເຂົ້າ Storage ບໍ່ໄດ້: '+e.message+' (ເກັບຮູບໃນຖານຂໍ້ມູນຊົ່ວຄາວ)',true);return d})}
 function legacyCount(){return PRD.filter(function(p){return /^data:/.test(p.img||'')}).length}
 function migBind(){
   var info=$('#mgInfo'),go=$('#mgGo'),msg=$('#mgMsg');if(!info||!go)return;
@@ -286,13 +298,13 @@ function migBind(){
   }
   paint();
   go.onclick=function(){
-    go.disabled=true;var done=0,fail=0;
+    go.disabled=true;var done=0,fail=0,ferr='';
     function say(t,cls){msg.innerHTML='<div class="'+(cls||'hint')+'">'+t+'</div>'}
     var mains=PRD.filter(function(p){return /^data:/.test(p.img||'')});
     function runMain(i){
       if(i>=mains.length)return Promise.resolve();
       say('ກຳລັງຍ້າຍຮູບຫຼັກ '+(i+1)+'/'+mains.length+'…');
-      return putImg(mains[i].img).then(function(u){return SB.update('products','id=eq.'+mains[i].id,{img:u})}).then(function(){done++},function(e){fail++;if(fail===1)say('ຜິດພາດ: '+esc(e.message),'err')}).then(function(){return runMain(i+1)})
+      return putImg(mains[i].img).then(function(u){return SB.update('products','id=eq.'+mains[i].id,{img:u})}).then(function(){done++},function(e){fail++;if(!ferr)ferr=e.message;if(fail===1)say('ຜິດພາດ: '+esc(e.message),'err')}).then(function(){return runMain(i+1)})
     }
     function runExtra(){
       if(!U4OK)return Promise.resolve();
@@ -301,11 +313,11 @@ function migBind(){
         function one(i){
           if(i>=ids.length)return Promise.resolve();
           say('ກຳລັງຍ້າຍຮູບເພີ່ມເຕີມ '+(i+1)+'/'+ids.length+'…');
-          return SB.select('product_images','select=img&id=eq.'+ids[i]).then(function(r){return putImg(r[0].img)}).then(function(u){return SB.update('product_images','id=eq.'+ids[i],{img:u})}).then(function(){done++},function(e){fail++}).then(function(){return one(i+1)})
+          return SB.select('product_images','select=img&id=eq.'+ids[i]).then(function(r){return putImg(r[0].img)}).then(function(u){return SB.update('product_images','id=eq.'+ids[i],{img:u})}).then(function(){done++},function(e){fail++;if(!ferr)ferr=e.message}).then(function(){return one(i+1)})
         }
         return one(0)})
     }
-    runMain(0).then(runExtra).then(function(){return loadAll()}).then(function(){badges();paint();say(fail?('ຍ້າຍແລ້ວ '+done+' ຮູບ, ຜິດພາດ '+fail+' ຮູບ — ລອງກົດອີກຄັ້ງ'):('✅ ຍ້າຍແລ້ວ '+done+' ຮູບ'),fail?'err':'okbox')}).catch(function(e){say('ຜິດພາດ: '+esc(e.message),'err');go.disabled=false})
+    runMain(0).then(runExtra).then(function(){return loadAll()}).then(function(){badges();paint();say(fail?('ຍ້າຍແລ້ວ '+done+' ຮູບ, ຜິດພາດ '+fail+' ຮູບ<br><b>ສາເຫດ:</b> '+esc(ferr)+'<br>ແກ້ແລ້ວລອງກົດອີກຄັ້ງ'):('✅ ຍ້າຍແລ້ວ '+done+' ຮູບ'),fail?'err':'okbox')}).catch(function(e){say('ຜິດພາດ: '+esc(e.message),'err');go.disabled=false})
   }
 }
 function beep(){try{var c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.08;o.start();setTimeout(function(){o.stop();c.close()},220)}catch(e){}}
@@ -759,10 +771,10 @@ function trendHtml(S){
   var mode=A.grp||(days.length>45?'m':'d'),rows;
   if(mode==='m'){var m={};days.forEach(function(d){var k=d['ວັນທີ'].slice(0,7),x=m[k]||(m[k]={k:k,n:0,s:0,p:0});x.n+=d['ຈຳນວນອໍເດີ'];x.s+=d['ຍອດຂາຍ'];x.p+=d['ກຳໄລປະມານ']});rows=Object.keys(m).sort().map(function(k){return m[k]})}
   else rows=days.map(function(d){return{k:d['ວັນທີ'],n:d['ຈຳນວນອໍເດີ'],s:d['ຍອດຂາຍ'],p:d['ກຳໄລປະມານ']}});
-  var mx=Math.max.apply(null,rows.map(function(r){return r.s}))||1,best=rows.reduce(function(a,r){return r.s>a.s?r:a},rows[0]);
+  var few=rows.length<=10,mx=Math.max.apply(null,rows.map(function(r){return r.s}))||1,best=rows.reduce(function(a,r){return r.s>a.s?r:a},rows[0]);
   var h='<div class="card col" style="gap:8px"><div class="row" style="flex-wrap:wrap"><h3 style="font-size:16px;flex:1">ຍອດຂາຍ'+(mode==='m'?'ລາຍເດືອນ':'ລາຍວັນ')+'</h3><button class="chip" data-grp="d" aria-pressed="'+(mode==='d')+'">ລາຍວັນ</button><button class="chip" data-grp="m" aria-pressed="'+(mode==='m')+'">ລາຍເດືອນ</button></div>'+
-    '<div class="bars" role="img" aria-label="ກຣາຟຍອດຂາຍ '+rows.length+(mode==='m'?' ເດືອນ':' ວັນ')+' ສູງສຸດ '+esc(best.k)+' '+nf(best.s)+' ກີບ">'+rows.map(function(r){return'<i class="'+(r.s>0?'':'z')+'" style="height:'+Math.max(3,Math.round(r.s/mx*100))+'%" title="'+esc(r.k)+' · '+nf(r.s)+' ກີບ · '+r.n+' ອໍເດີ"></i>'}).join('')+'</div>'+
-    '<div class="bx"><span>'+esc(rows[0].k)+'</span><span>'+esc(rows[rows.length-1].k)+'</span></div>'+
+    '<div class="bars'+(few?' few':'')+'" role="img" aria-label="ກຣາຟຍອດຂາຍ '+rows.length+(mode==='m'?' ເດືອນ':' ວັນ')+' ສູງສຸດ '+esc(best.k)+' '+nf(best.s)+' ກີບ">'+rows.map(function(r){var bar='<i class="'+(r.s>0?'':'z')+'" style="height:'+Math.max(3,Math.round(r.s/mx*100))+'%" title="'+esc(r.k)+' · '+nf(r.s)+' ກີບ · '+r.n+' ອໍເດີ"></i>';return few?'<div class="bc"><div class="bv">'+bar+'</div><span>'+esc(mode==='m'?r.k:r.k.slice(5))+'</span></div>':bar}).join('')+'</div>'+
+    (few?'':'<div class="bx"><span>'+esc(rows[0].k)+'</span><span>'+esc(rows[rows.length-1].k)+'</span></div>')+
     '<div class="sm muted">ຍອດສູງສຸດ: <b>'+esc(best.k)+'</b> · '+money(best.s)+' ('+best.n+' ອໍເດີ)</div>'+
     '<details><summary class="sm" style="cursor:pointer;min-height:32px;display:flex;align-items:center">ເບິ່ງເປັນຕາຕະລາງ</summary><div style="overflow-x:auto"><table class="tbl"><tr><th>'+(mode==='m'?'ເດືອນ':'ວັນທີ')+'</th><th class="n">ອໍເດີ</th><th class="n">ຍອດຂາຍ</th><th class="n">ກຳໄລປະມານ</th></tr>'+
     rows.slice().reverse().slice(0,62).map(function(r){return'<tr><td>'+esc(r.k)+'</td><td class="n">'+r.n+'</td><td class="n">'+nf(r.s)+'</td><td class="n">'+nf(r.p)+'</td></tr>'}).join('')+'</table></div></details></div>';
