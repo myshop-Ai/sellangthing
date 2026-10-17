@@ -75,6 +75,13 @@ img{max-width:100%}
 .err{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:8px 12px;font-size:14px}
 .hint{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:8px 12px;font-size:13.5px}
 .okbox{background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:8px 12px;font-size:14px}
+.slipbox{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.slipbox.busy{opacity:.5;pointer-events:none}
+.slipbtn{cursor:pointer;text-align:center;justify-content:center}
+.wafab{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:60;display:inline-flex;align-items:center;gap:8px;background:#1F9D55;color:#fff;text-decoration:none;border-radius:999px;padding:12px 18px;box-shadow:0 6px 18px rgba(0,0,0,.25);font-size:15px;min-height:48px}
+.wafab span{font-size:20px;line-height:1}
+@media (max-width:420px){.wafab b{display:none}.wafab{padding:12px 14px}}
+body{padding-bottom:84px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .empty{text-align:center;color:var(--muted);padding:36px 12px}
 .spin{display:inline-block;width:18px;height:18px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle}
@@ -341,7 +348,7 @@ function init(){
 function reload(){return V.legacy?loadLegacy().then(function(){render()}):fetchList(true,Math.max(PAGE,V.list.length))}
 function applySettings(){
   var n=ST.name||'ຮ້ານຂອງຂ້ອຍ';$('#shopname').textContent=n;document.title=n;
-  $('#foot').textContent='© '+n
+  $('#foot').textContent='© '+n;chatFab()
 }
 function updCart(){var c=calc().n,b=$('#cc');b.textContent=c;b.classList.toggle('hide',!c)}
 function priceTxt(){var a=num(V.min),b=num(V.max);return a&&b?money(a)+' – '+money(b):a?'ແຕ່ '+money(a):'ບໍ່ເກີນ '+money(b)}
@@ -485,10 +492,43 @@ function waLink(r,lines){
   var t='ສະບາຍດີ, ຂ້ອຍສັ່ງຊື້ ເລກອໍເດີ '+r.no+'\n'+lines.map(function(l){return'• '+l.name+' × '+l.qty}).join('\n')+'\nລວມ '+money(r.total)+'\nຊື່: '+F.name+'\nໂທ: '+F.phone+'\nແຂວງ: '+F.province+(F.address?'\nທີ່ຢູ່: '+F.address:'');
   return'https://wa.me/'+num+'?text='+encodeURIComponent(t)
 }
+
+// ---- slip upload ----
+function resizeJpg(file,max,q){return new Promise(function(res,rej){var r=new FileReader();r.onerror=function(){rej(new Error('ອ່ານຮູບບໍ່ໄດ້'))};r.onload=function(){var im=new Image();im.onerror=function(){rej(new Error('ໄຟລ໌ນີ້ບໍ່ແມ່ນຮູບ ຫຼືເປີດບໍ່ໄດ້'))};im.onload=function(){var k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q))};im.src=r.result};r.readAsDataURL(file)})}
+function slipHtml(tok,at){
+  var inp='<input type="file" accept="image/*" data-slip="'+esc(tok)+'" hidden>';
+  return'<div class="slipbox" data-tok="'+esc(tok)+'">'+(at?'<div class="okbox">🧾 ສົ່ງສະລິບແລ້ວ · '+fmtDate(at)+'<br><span class="sm">ຮ້ານກຳລັງກວດສອບ ແລະຈະຢືນຢັນໃຫ້</span></div><label class="btn sm slipbtn">ສົ່ງສະລິບໃໝ່'+inp+'</label>':'<label class="btn primary big slipbtn">📎 ອັບໂຫຼດສະລິບໂອນເງິນ'+inp+'</label><div class="sm muted" style="text-align:center">ຖ່າຍຮູບ ຫຼືເລືອກຮູບສະລິບຈາກເຄື່ອງ</div>')+'</div>'}
+document.addEventListener('change',function(e){
+  var t=e.target;if(!t||!t.hasAttribute||!t.hasAttribute('data-slip'))return;
+  var f=t.files&&t.files[0],tok=t.dataset.slip,box=t.closest('.slipbox');if(!f)return;
+  if(f.type&&!/^image\//.test(f.type)){toast('ກະລຸນາເລືອກໄຟລ໌ຮູບ',true);t.value='';return}
+  if(box)box.classList.add('busy');
+  resizeJpg(f,1100,.82).then(function(u){return u.length>600000?resizeJpg(f,800,.68):u}).then(function(u){return SB.rpc('submit_slip',{p_token:tok,p_img:u})}).then(function(r){
+    var at=(r&&r.slip_at)||new Date().toISOString();
+    document.querySelectorAll('.slipbox').forEach(function(b){if(b.dataset.tok===tok)b.outerHTML=slipHtml(tok,at)});
+    (V.orders||[]).forEach(function(o){if(o.token===tok)o.slip_at=at});
+    toast('ສົ່ງສະລິບແລ້ວ ✓')
+  }).catch(function(err){
+    if(box)box.classList.remove('busy');t.value='';
+    var m=err&&err.message||'';if(/submit_slip|schema cache|Could not find/i.test(m))m='ລະບົບຍັງບໍ່ພ້ອມຮັບສະລິບ — ກະລຸນາສົ່ງສະລິບທາງ WhatsApp';
+    toast(m||'ສົ່ງສະລິບບໍ່ສຳເລັດ',true)})
+});
+// ---- WhatsApp chat button ----
+function waNum(){return String(ST.wa||'').replace(/\D/g,'')}
+function chatHref(p){
+  var t='ສະບາຍດີ, ຂ້ອຍຢາກສອບຖາມ';
+  if(p)t='ສະບາຍດີ, ຂ້ອຍສົນໃຈສິນຄ້າ "'+p.name+'" '+prodUrl(p.id)+' ຂໍສອບຖາມເພີ່ມເຕີມ';
+  return'https://wa.me/'+waNum()+'?text='+encodeURIComponent(t)}
+function chatFab(){
+  var f=$('#waFab');
+  if(waNum().length>=8&&ST.waBtn!==false){
+    if(!f){f=document.createElement('a');f.id='waFab';f.className='wafab';f.target='_blank';f.rel='noopener';f.setAttribute('aria-label','ແຊັດກັບຮ້ານທາງ WhatsApp');f.innerHTML='<span aria-hidden="true">💬</span><b>ແຊັດກັບຮ້ານ</b>';document.body.appendChild(f)}
+    f.href=chatHref()
+  }else if(f)f.remove()}
 function success(r,lines,pm){
   var w=waLink(r,lines),sl=slipLink(r.no,r.total);
   modal('<div class="empty" style="padding:10px 0"><div style="font-size:48px">✅</div><h2>ສັ່ງຊື້ສຳເລັດ!</h2><p>ເລກອໍເດີ <b>'+esc(r.no)+'</b><br>ຍອດລວມ <b>'+money(r.total)+'</b></p><p class="sm">ຮ້ານຈະຕິດຕໍ່ຢືນຢັນທາງເບີທີ່ທ່ານໃຫ້ໄວ້. ຕິດຕາມສະຖານະໄດ້ທີ່ປຸ່ມ “ອໍເດີຂອງຂ້ອຍ”.</p></div>'+(pm==='transfer'?qrBox(r.total):'')+'<div class="col" style="margin-top:12px">'+
-    (pm==='transfer'&&sl?'<a class="btn wa big" target="_blank" rel="noopener" href="'+esc(sl)+'">ສົ່ງສະລິບໂອນທາງ WhatsApp</a>':'')+
+    (pm==='transfer'&&r.token?slipHtml(r.token,null):'')+(pm==='transfer'&&sl?'<a class="btn wa big" target="_blank" rel="noopener" href="'+esc(sl)+'">ຫຼື ສົ່ງສະລິບທາງ WhatsApp</a>':'')+
     (pm!=='transfer'&&w?'<a class="btn wa big" target="_blank" rel="noopener" href="'+esc(w)+'">ແຈ້ງຮ້ານທາງ WhatsApp (ບໍ່ບັງຄັບ)</a>':'')+
     '<button class="btn primary big" id="goOrders">ເບິ່ງອໍເດີຂອງຂ້ອຍ</button><button class="btn big" data-close>ສັ່ງຊື້ຕໍ່</button></div>')
 }
@@ -513,7 +553,7 @@ function renderOrders(){
     (o.edited_at?'<div class="sm muted">✏️ ຮ້ານໄດ້ປັບປຸງລາຍລະອຽດອໍເດີນີ້ແລ້ວ</div>':'')+
     (o.tracking||o.carrier?'<div class="okbox">🚚 '+esc(o.carrier)+' '+esc(o.tracking)+'</div>':'')+
     '<div class="tot g"><span>ລວມ</span><span>'+money(o.total)+'</span></div>'+
-    (o.pay==='transfer'&&!o.paid&&o.status!=='cancelled'?'<button class="btn primary sm" data-qr="'+esc(o.no)+'">ເບິ່ງ QR ໂອນເງິນ</button>':'')+(o.status==='new'?'<button class="btn danger sm" data-cancel="'+esc(o.token)+'">ຍົກເລີກອໍເດີ</button>':'')+'</div>'}).join('')+'</div>';
+    (o.pay==='transfer'&&!o.paid&&o.status!=='cancelled'?'<button class="btn primary sm" data-qr="'+esc(o.no)+'">ເບິ່ງ QR ໂອນເງິນ</button>'+('slip_at' in o?slipHtml(o.token,o.slip_at):''):'')+(o.status==='new'?'<button class="btn danger sm" data-cancel="'+esc(o.token)+'">ຍົກເລີກອໍເດີ</button>':'')+'</div>'}).join('')+'</div>';
   if(V.loadErr2)h+='<div class="err" style="margin-top:10px">'+esc(V.loadErr2)+'</div>';
   app.innerHTML=h
 }
@@ -552,6 +592,7 @@ function prodView(){
   if(n)h+='<button class="btn big" id="pdCart">🛒 ເບິ່ງກະຕ່າ ('+n+')</button>';
   h+='</div>';
   var url=prodUrl(p.id),msg=p.name+' — '+money(eff(p));
+  if(waNum().length>=8)h+='<a class="btn wa" style="margin-top:12px;width:100%" target="_blank" rel="noopener" href="'+esc(chatHref(p))+'">💬 ຖາມຮ້ານກ່ຽວກັບສິນຄ້ານີ້</a>';
   h+='<div class="row" style="flex-wrap:wrap;margin-top:14px;gap:8px"><span class="sm muted">ແຊຣ໌ສິນຄ້ານີ້:</span>'+(navigator.share?'<button class="btn sm" data-share="1">📤 ແຊຣ໌</button>':'')+'<button class="btn sm" data-copy="1">🔗 ຄັດລອກລິ້ງ</button><a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/?text='+encodeURIComponent(msg+'\n'+url)+'">WhatsApp</a><a class="btn sm" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(url)+'">Facebook</a></div>';
   var sc=el.closest('.md')?el.closest('.md').scrollTop:0;
   el.innerHTML=h;if(el.closest('.md'))el.closest('.md').scrollTop=sc
@@ -599,7 +640,7 @@ document.addEventListener('click',function(e){
   else if(t.dataset.tab!=null&&t.hasAttribute('data-tab')){V.tab=t.dataset.tab;fetchList(true)}
   else if(t.hasAttribute('data-cat')){V.cat=t.dataset.cat;fetchList(true)}
   else if(t.hasAttribute('data-close')){var o=t.closest('.ov');if(o)o.remove()}
-  else if(t.dataset.qr){var oo=(V.orders||[]).find(function(x){return x.no===t.dataset.qr});if(oo){var sl2=slipLink(oo.no,oo.total);modal('<div class="mh"><h2>ໂອນເງິນ '+esc(oo.no)+'</h2><button class="x" data-close aria-label="ປິດ">×</button></div>'+qrBox(oo.total)+(sl2?'<a class="btn wa big" style="margin-top:12px" target="_blank" rel="noopener" href="'+esc(sl2)+'">ສົ່ງສະລິບໂອນທາງ WhatsApp</a>':''))}}
+  else if(t.dataset.qr){var oo=(V.orders||[]).find(function(x){return x.no===t.dataset.qr});if(oo){var sl2=slipLink(oo.no,oo.total);modal('<div class="mh"><h2>ໂອນເງິນ '+esc(oo.no)+'</h2><button class="x" data-close aria-label="ປິດ">×</button></div>'+qrBox(oo.total)+('slip_at' in oo?slipHtml(oo.token,oo.slip_at):'')+(sl2?'<a class="btn wa big" style="margin-top:12px" target="_blank" rel="noopener" href="'+esc(sl2)+'">ສົ່ງສະລິບໂອນທາງ WhatsApp</a>':''))}}
   else if(t.dataset.cancel){
     if(!t.classList.contains('sure')){t.classList.add('sure');t.textContent='ກົດອີກຄັ້ງເພື່ອຢືນຢັນຍົກເລີກ';return}
     t.disabled=true;SB.rpc('cancel_order',{p_token:t.dataset.cancel}).then(function(ok){toast(ok?'ຍົກເລີກແລ້ວ':'ຍົກເລີກບໍ່ໄດ້ ຮ້ານຢືນຢັນອໍເດີແລ້ວ',!ok);loadOrders()}).catch(function(er){toast(er.message,true);t.disabled=false})}
